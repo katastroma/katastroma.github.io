@@ -1,6 +1,6 @@
 ---
 title: Multi-Cluster
-nav_order: 5
+nav_order: 1
 ---
 
 # Multi-Cluster
