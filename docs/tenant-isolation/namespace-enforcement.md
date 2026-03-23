@@ -23,6 +23,9 @@ enforcement. Grammateus must follow the naming convention `<prefix>-deployer`
 when creating SAs.
 
 **Open issue:** This relies on no entity other than grammateus being able to
-create SAs in `tenant-*` namespaces. A Gatekeeper policy restricting SA creation
-in `tenant-*` namespaces to grammateus's own SA would close this loop, but adds
-another policy layer.
+create SAs in `tenant-*` namespaces. Without this restriction, a tenant's
+deployer SA (or a controller it deploys) could create a rogue SA in
+`tenant-acme` with a different name — Gatekeeper would derive a different prefix
+from that SA, allowing it to operate outside the tenant's intended namespace
+scope. A Gatekeeper policy restricting SA creation in `tenant-*` namespaces to
+grammateus's own SA would close this loop.

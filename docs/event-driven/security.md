@@ -7,7 +7,18 @@ has_children: true
 
 # Security
 
-The event bus and shared storage operate outside the Kubernetes API boundary.
-Security controls come from three layers: what Kubernetes provides natively, what
-the platform enforces through its own design, and what the event bus and storage
-solutions must provide as capabilities.
+The event bus and shared storage operate outside the Kubernetes API boundary —
+RBAC and Gatekeeper do not intercept their operations directly. Security
+controls come from three layers:
+
+- **Kubernetes-provided** — ServiceAccount identity, Gatekeeper tenant
+  exclusion, RBAC on platform Secrets, lateral movement prevention
+- **Platform-enforced** — cryptographic tenant verification, STS credential
+  minting restricted to the source handler, per-service publish/subscribe
+  profiles
+- **Solution requirements** — capabilities the event bus and storage must
+  provide (token auth, ACLs, STS, TTL, audit logging)
+
+Tenant isolation at the Kubernetes API level is covered under
+[Tenant Isolation](../tenant-isolation.md). This section covers isolation within
+the event bus and storage systems.

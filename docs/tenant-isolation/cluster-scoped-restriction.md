@@ -21,4 +21,13 @@ reject.
 tenants from installing operators or charts that include CRDs. Allowing it means
 CRDs are visible cluster-wide to all tenants. CRD groups are defined by the CRD
 spec itself — tenants cannot prefix third-party CRD groups without forking.
-Mitigation TBD.
+
+Candidate mitigations:
+
+- Block tenant CRD creation entirely — tenants request CRDs through the
+  platform, which vets and installs them. Safest but adds operational overhead.
+- Allow CRD creation but use Gatekeeper to restrict which API groups tenants can
+  register. Limits blast radius but requires maintaining an allowlist.
+- Allow CRD creation with labeling — all tenant-created CRDs are labeled with
+  the tenant identity. Visibility is cluster-wide but ownership is tracked for
+  cleanup and auditing.

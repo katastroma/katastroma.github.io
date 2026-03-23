@@ -13,8 +13,9 @@ nav_order: 1
 - **Gatekeeper prevents tenant access to platform infrastructure** — tenant
   deployer SAs cannot create resources in the platform namespace. Tenants cannot
   deploy services that impersonate platform SAs. SA creation in `tenant-*`
-  namespaces is restricted to grammateus. Tenants have no SA that the event bus
-  or storage would recognize.
+  namespaces must be restricted to grammateus (see
+  [open issue](../../tenant-isolation/namespace-enforcement.md)). Tenants have
+  no SA that the event bus or storage would recognize.
 - **RBAC restricts platform Secrets** — event bus and storage admin credentials
   are Kubernetes Secrets in the platform namespace, accessible only to platform
   SAs. Compromise of admin credentials is a full platform compromise scenario.

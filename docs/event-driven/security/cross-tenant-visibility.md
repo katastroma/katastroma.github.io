@@ -21,10 +21,11 @@ stage. It cannot observe events outside its stage.
 
 1. **Stage-scoped permissions** — blast radius is one stage, not the full
    pipeline.
-2. **Per-event storage credentials** — a service processing tenant acme's event
-   cannot use those credentials to access tenant globex's storage.
+2. **Per-event, per-run storage credentials** — scoped to
+   `pipeline/{tenant}/{run-id}/*`. A service processing tenant acme's event
+   cannot access tenant globex's storage, and credentials from one run cannot
+   access another. See [Platform-Enforced Controls](platform-controls.md) for
+   the credential minting model.
 3. **Read/write credentials expire** — cleanup credentials are delete-only.
-4. **Per-run credential independence** — credentials from one run cannot access
-   another run's storage.
-5. **Audit logging** — all event bus and storage activity is logged by
+4. **Audit logging** — all event bus and storage activity is logged by
    credential.

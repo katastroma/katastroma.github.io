@@ -10,12 +10,8 @@ nav_order: 1
    [prora](https://github.com/katastroma/prora))
 2. [Grammateus](https://github.com/katastroma/grammateus) creates a namespace
    for the tenant
-3. Grammateus creates a deployer ServiceAccount in the tenant namespace with:
-   - A ClusterRole granting `create`, `patch`, and `delete` on all resources
-     (`*`) - `create` and `patch` for SSA, `delete` for pruning, _no `read`_ to
-     ensure isolation
-   - A ClusterRoleBinding binding the SA to the ClusterRole
-   - Gatekeeper constrains where the SA can operate by prefix
+3. Grammateus creates a deployer ServiceAccount in the tenant namespace (see
+   [SA Permissions](sa-permissions.md) for the permission model)
 4. Tenant configures the platform source handlers, watch targets, any necessary
    credentials with the source handler APIs
 5. Tenant configures their sources with any verifications needed to wire up

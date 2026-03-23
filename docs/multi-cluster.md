@@ -1,12 +1,15 @@
 ---
 title: Multi-Cluster
-nav_order: 1
+nav_order: 5
 ---
 
 # Multi-Cluster
 
-**Open issue:** Should be a straightforward solve but may have to track
-ClusterIdentity inside the tenant namespace.
+**Not yet designed.** The architecture should support multi-cluster but the
+design is open.
+
+Should be a straightforward solve but may have to track ClusterIdentity inside
+the tenant namespace.
 
 The architecture should support:
 
