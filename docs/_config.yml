@@ -1,0 +1,7 @@
+title: Katastroma
+description: Source event-driven platform for Kubernetes
+remote_theme: just-the-docs/just-the-docs
+url: https://katastroma.org
+
+plugins:
+  - jekyll-remote-theme
