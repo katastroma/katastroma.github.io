@@ -51,6 +51,6 @@ The platform is deployed as Helm charts via
 [phortion](https://github.com/katastroma/phortion):
 
 - **Epibathra** — tenant management stack (tenant API server, tenant API
-  frontend, gatekeeper, auth/IdP)
-- **Prymna** — source event handler stack (source handler APIs, renderers,
-  orderers, and provisioners)
+  frontend, pipeline observability, gatekeeper, auth/IdP)
+- **Prymna** — pipeline stack (event bus, shared storage, source handler APIs,
+  renderers, orderers, and provisioners)
