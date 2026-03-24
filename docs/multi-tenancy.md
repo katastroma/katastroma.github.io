@@ -14,4 +14,4 @@ enforcement.
 
 Gatekeeper enforces label-based namespace ownership so that each tenant's
 deployer SA can only operate in namespaces labeled with its tenant identity. See
-[Tenant Isolation](tenant-isolation.md) for the full trust chain.
+[Tenant Isolation](multi-tenancy/tenant-isolation.md) for the full trust chain.

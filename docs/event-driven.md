@@ -24,6 +24,24 @@ result to the next. Data flows forward only — no stage calls backward.
 [Pharos](https://github.com/katastroma/pharos) →
 [Source Handler](event-driven/source-handler.md) (replay)
 
+## Scaling
+
+Every stage is stateless. Kubernetes Service load-balances across pods. Each
+stage scales independently.
+
+## Observability
+
+Each stage writes telemetry to the OpenTelemetry collector. Each pipeline run is
+a trace. Each stage is a span. The trace ID propagates through gRPC metadata
+across the entire pipeline.
+
+### Tenant-Facing Observability
+
+Grafana queries the OTel collector and serves tenant-scoped dashboards showing
+pipeline run status and history. Tenants see their runs in Grafana, scoped by
+tenant identity. Watch target attributes on the source handler's span give
+tenants visibility into which source triggered each run.
+
 ## Failure Recovery
 
 When pharos receives a failed span, it follows the trace lineage to obtain the
@@ -35,22 +53,4 @@ with the run ID (see
 
 Pharos queries the OTel collector for runs that started but never finished
 within a timeout. These are treated as failures and replayed using the same
-rules.
-
-# Scaling
-
-Every stage is stateless. Kubernetes Service load-balances across pods. Each
-stage scales independently.
-
-# Observability
-
-Each stage writes telemetry to the OpenTelemetry collector. Each pipeline run is
-a trace. Each stage is a span. The trace ID propagates through gRPC metadata
-across the entire pipeline.
-
-## Tenant-Facing Observability
-
-Grafana queries the OTel collector and serves tenant-scoped dashboards showing
-pipeline run status and history. Tenants see their runs in Grafana, scoped by
-tenant identity. Watch target attributes on the source handler's span give
-tenants visibility into which source triggered each run.
+[replayability rules](event-driven/source-handler.md#replayability).
