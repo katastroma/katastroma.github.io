@@ -13,37 +13,22 @@ The platform decomposes GitOps into discrete stages connected by gRPC streaming.
 Each stage receives data from the previous stage, does its work, and streams the
 result to the next. Data flows forward only — no stage calls backward.
 
-```
-Source Handler → Renderer → Orderer → Provisioner  (data, gRPC streaming)
-     ↓              ↓          ↓           ↓
-                 OTel Collector                     (telemetry)
-     ↓              ↓          ↓           ↓
-                   Pharos                           (status reporting)
-```
+**Data flow** (gRPC streaming): [Source Handler](event-driven/source-handler.md)
+→ [Renderer](event-driven/renderer.md) → [Orderer](event-driven/orderer.md) →
+[Provisioner](event-driven/provisioner.md)
 
-Each stage writes telemetry to the OpenTelemetry collector. These are separate
-concerns from the data flow.
+**Telemetry**: Each stage → OTel Collector
 
-## Data Flow
-
-Each pipeline stage defines a gRPC streaming interface. The caller streams data
-to the callee, the callee processes it and streams the result to the next stage.
-Each call is a handoff — the caller moves on after streaming.
-
-1. Source handler receives a source event, verifies it, matches against watch
-   targets
-2. Source handler fetches source, inspects it, determines renderer type and
-   ordering method
-3. Source handler streams source to the appropriate renderer
-4. Renderer produces manifests, streams to the appropriate orderer
-5. Orderer sorts manifests, streams to the provisioner
-6. Provisioner applies ordered manifests to the cluster via impersonation
+**Coordination/Failure Detection**: Any stage failure → OTel Collector →
+[Pharos](https://github.com/katastroma/pharos) →
+[Source Handler](event-driven/source-handler.md) (replay)
 
 ## Failure Recovery
 
-When pharos receives a failed span, it follows the trace lineage to the obtain
-the originating source handler, connects to its service, and calls the `Replay`
-RPC with the run ID (see [Replayability](#source-handler.md#Replayability)).
+When pharos receives a failed span, it follows the trace lineage to obtain the
+originating source handler, connects to its service, and calls the `Replay` RPC
+with the run ID (see
+[Replayability](event-driven/source-handler.md#replayability)).
 
 ## Crash Detection
 
@@ -65,8 +50,8 @@ across the entire pipeline.
 ## Coordination
 
 The collector serves as both the observability backend and the coordination
-layer. The OTel collector routes failed spans to pharos for replay coordination
-(see [Replaybility](event-driven/source-handler.md#Replayability)).
+layer. The OTel collector routes failed spans to pharos for
+[failure recovery](#failure-recovery).
 
 ## Tenant-Facing Observability
 

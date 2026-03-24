@@ -19,8 +19,7 @@ When a source handler receives a source event, the source handler:
 
 - verifies it against specific tenant secrets and signatures
 - matches it against the specific tenant watch targets
-- inspects the source to understand what renderer to pass the source on to to be
-  rendered
+- inspects the source to understand what renderer to stream the source to
 - connects to the respective renderer service and streams the source to the
   renderer
 
