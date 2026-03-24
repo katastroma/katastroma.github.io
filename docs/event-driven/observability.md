@@ -1,32 +1,23 @@
 ---
 title: Observability
-parent: Event-Driven
-nav_order: 7
+parent: Pipeline
+nav_order: 3
 ---
 
 # Observability
 
-The event bus is the source of truth for pipeline run history. Every stage
-transition is a persisted event with full metadata. The event bus retains
-messages for a configurable duration (days, months, whatever is needed).
+Each stage writes telemetry to the OpenTelemetry collector. Each pipeline run is
+a trace. Each stage is a span. The trace ID propagates through gRPC metadata
+across the entire pipeline.
 
-## Real-Time Pipeline Status
+## Tenant-Facing Observability
 
-Pharos is the observability service. It subscribes to all pipeline event
-subjects, filters events by tenant identity from the payload, and serves
-tenant-scoped pipeline status to frontend clients over WebSocket.
+Grafana queries the OTel collector and serves tenant-scoped dashboards showing
+pipeline run status and history. Tenants see their runs in Grafana, scoped by
+tenant identity.
 
-The frontend (prora) authenticates with grammateus and receives a token. It
-opens a WebSocket connection to pharos with that token. Pharos validates the
-token, extracts the tenant identity, and streams only that tenant's pipeline
-events to the connection.
+## Pipeline State
 
-Pipeline services do not serve frontend connections. Each service has one job —
-process its stage's events. Pharos is the only service that bridges the event
-bus to the frontend.
-
-## Historical Queries
-
-Historical pipeline run data is queried from the event bus's persisted message
-streams. Pharos serves historical queries using the same tenant-scoped
-authorization — a tenant can only query its own runs.
+Pharos queries the OTel collector for pipeline run state — which runs are
+in-flight, which completed, which failed. The collector is the shared state
+between pharos (coordination) and Grafana (tenant observability).

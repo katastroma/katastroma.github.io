@@ -15,8 +15,8 @@ CLUSTER
   │   ├── keleustes implementations (render manifests from source)
   │   ├── diataxis implementations (order manifests for safe apply)
   │   ├── katartismos implementations (provision resources from manifests via impersonation)
-  │   ├── event bus (pipeline coordination)
-  │   ├── shared storage (artifacts between pipeline stages)
+  │   ├── pharos (pipeline coordinator)
+  │   ├── OTel collector (telemetry)
   │   └── gatekeeper (admission control)
   │
   ├── CLUSTER-SCOPED RBAC (per tenant, created by grammateus)

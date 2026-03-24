@@ -1,17 +1,26 @@
 ---
-title: Event-Driven
+title: Pipeline
 nav_order: 1
 has_children: true
 ---
 
-# Event-Driven
+# Pipeline
 
-The platform has two infrastructure planes:
+The platform decomposes GitOps into discrete stages connected by gRPC streaming.
+Each stage receives data from the previous stage, does its work, and streams the
+result to the next. Data flows forward only — no stage calls backward.
 
-- **Event bus** — control plane. Signals between pipeline stages via
-  subject-based routing and persistent message streams.
-- **Shared object storage** — data plane. Carries artifacts (source content,
-  manifests) between pipeline stages via tenant-scoped, run-scoped storage keys.
+```
+Source Handler → Renderer → Orderer → Provisioner  (data, gRPC streaming)
+     ↓              ↓          ↓           ↓
+                   Pharos                           (status reporting)
+     ↓              ↓          ↓           ↓
+                 OTel Collector                     (telemetry)
+```
+
+Each stage also reports its status to pharos (pipeline coordinator) and writes
+telemetry to the OpenTelemetry collector. These are separate concerns from the
+data flow.
 
 ## Watch Targets
 

@@ -14,7 +14,7 @@ isolation through Kubernetes-native RBAC, impersonation, and admission control.
 GitOps has 5 operations:
 
 1. **Listen** - wait for events
-   - Multiple event-listeners running in the system - each for different source
+   - Multiple source handlers running in the system - each for different source
      types (GitHub, OCI, S3, etc.)
 2. **Retrieve** — given source event, retrieve the source content
 3. **Render** — given source content, produce Kubernetes manifests
@@ -31,26 +31,26 @@ and provide the concrete service.
 | -------------------------------------------------------- | ---------------------------- |
 | [grammateus](https://github.com/katastroma/grammateus)   | Tenant management API server |
 | [prora](https://github.com/katastroma/prora)             | Tenant self-service frontend |
-| [phortizo](https://github.com/katastroma/phortizo)       | GitHub Source Event Listener |
+| [phortizo](https://github.com/katastroma/phortizo)       | Source handler (GitHub)       |
 | [keleustēs](https://github.com/katastroma/keleustes)     | Renderer interface           |
 | [orpheus](https://github.com/katastroma/orpheus)         | Renderer implementation      |
 | [diataxis](https://github.com/katastroma/diataxis)       | Orderer interface            |
 | [stolarches](https://github.com/katastroma/stolarches)   | Orderer implementation       |
 | [katartismos](https://github.com/katastroma/katartismos) | Provisioner interface        |
 | [histia](https://github.com/katastroma/histia)           | Provisioner implementation   |
-| [pharos](https://github.com/katastroma/pharos)           | Pipeline observability       |
+| [pharos](https://github.com/katastroma/pharos)           | Pipeline coordinator          |
 
 # Deployment
 
 All platform resources run in the **platform namespace** (default `katastroma`,
 configurable). Tenant resources are in namespaces labeled with the tenant
-identity. The platform namespace is where all platform services, the event bus,
-shared storage, Gatekeeper, and platform Secrets reside.
+identity. The platform namespace is where all platform services, Gatekeeper, and
+platform Secrets reside.
 
 The platform is deployed as Helm charts via
 [phortion](https://github.com/katastroma/phortion):
 
 - **Epibathra** — tenant management stack (tenant API server, tenant API
-  frontend, pipeline observability, gatekeeper, auth/IdP)
-- **Prymna** — pipeline stack (event bus, shared storage, source handler APIs,
-  renderers, orderers, and provisioners)
+  frontend, Grafana, gatekeeper, auth/IdP)
+- **Prymna** — pipeline stack (pipeline coordinator, OTel collector, source
+  handler APIs, renderers, orderers, and provisioners)
