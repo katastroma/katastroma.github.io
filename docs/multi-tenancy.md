@@ -1,6 +1,6 @@
 ---
 title: Multi-Tenancy
-nav_order: 3
+nav_order: 2
 has_children: true
 ---
 
@@ -8,11 +8,10 @@ has_children: true
 
 Each tenant gets a Kubernetes namespace, a deployer ServiceAccount, and
 cluster-scoped RBAC (ClusterRole + ClusterRoleBinding). All tenant resources are
-labeled with the tenant identity — this label is the ownership record used for
-provisioning, pruning, querying, and isolation enforcement.
+labeled with the tenant identity (`katastroma.io/tenant`) — this label is the
+ownership record used for provisioning, pruning, querying, and isolation
+enforcement.
 
-Gatekeeper enforces namespace prefix conventions so that each tenant's deployer
-SA can only operate within its own prefixed namespaces (see
-[Namespace Enforcement](tenant-isolation/namespace-enforcement.md)). This is the
-foundation of tenant isolation — it is not per-tenant configuration but a
-cluster-wide policy that applies automatically to every tenant.
+Gatekeeper enforces label-based namespace ownership so that each tenant's
+deployer SA can only operate in namespaces labeled with its tenant identity. See
+[Tenant Isolation](tenant-isolation.md) for the full trust chain.

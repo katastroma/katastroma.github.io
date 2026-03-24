@@ -9,7 +9,8 @@ nav_order: 1
 1. Tenant registers through the API (or via
    [prora](https://github.com/katastroma/prora))
 2. [Grammateus](https://github.com/katastroma/grammateus) creates a namespace
-   for the tenant
+   for the tenant and labels it with the tenant identity (see
+   [Trust Chain](tenant-isolation.md#trust-chain) for why this ordering matters)
 3. Grammateus creates a deployer ServiceAccount in the tenant namespace (see
    [SA Permissions](sa-permissions.md) for the permission model)
 4. Tenant configures the platform source handlers, watch targets, any necessary

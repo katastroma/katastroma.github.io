@@ -18,3 +18,10 @@ no coordination between instances. Each service scales independently:
 The event bus distributes events across consumer group members automatically.
 The shared storage scales independently of the event bus. No architectural
 ceiling on horizontal scaling.
+
+## Concurrent Runs
+
+Multiple pipeline runs for the same tenant can be in-flight simultaneously. Each
+run has its own run ID, storage path, and credentials — runs do not interact.
+Per-tenant concurrency limits are enforced at the source handler (see
+[Quotas](quotas.md)), not by the pipeline stages themselves.

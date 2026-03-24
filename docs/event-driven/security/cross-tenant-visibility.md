@@ -11,11 +11,24 @@ nav_order: 4
 
 Source handlers, renderers, orderers, and provisioners process events for all
 tenants within their stage. A renderer subscribed to
-`{domain}.source.ready.helm.*` receives events for every tenant. Running a
+`{domain}.source.ready.helm` receives events for every tenant. Running a
 separate instance per tenant does not scale to thousands of tenants.
 
 A compromised service can observe event metadata for all tenants within its
 stage. It cannot observe events outside its stage.
+
+## Event Payload Sensitivity
+
+Event payloads must contain only what is needed for routing and storage access —
+run ID, tenant identity, stage, outcome, storage key, credentials, pipeline
+routing, service account, and labels. Event payloads must not contain source
+content, rendered manifests, error details, or any tenant-specific data beyond
+operational metadata. Tenant data flows through shared storage with per-run
+scoped credentials, not through the event bus.
+
+A compromised service within a stage can observe which tenants exist, how often
+they deploy, and whether runs succeed or fail. It cannot observe what tenants
+are deploying — that data is in storage, protected by per-event credentials.
 
 ## Mitigations
 

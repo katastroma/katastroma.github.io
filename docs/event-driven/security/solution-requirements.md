@@ -9,9 +9,9 @@ nav_order: 3
 
 - SA token authentication via TokenReview API
 - Per-connection publish/subscribe ACLs
-- Tenant-scoped subject restriction for frontend connections
 - STS with prefix-scoped temporary credentials
 - STS access control restricting which SAs can mint credentials
 - Credential revocation
 - TTL-based object expiry
-- Audit logging
+- Audit logging — all authentication, publish, subscribe, and storage access
+  activity logged by credential

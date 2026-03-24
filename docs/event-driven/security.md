@@ -19,6 +19,7 @@ controls come from three layers:
 - **Solution requirements** — capabilities the event bus and storage must
   provide (token auth, ACLs, STS, TTL, audit logging)
 
-Tenant isolation at the Kubernetes API level is covered under
-[Tenant Isolation](../tenant-isolation.md). This section covers isolation within
-the event bus and storage systems.
+Kubernetes controls are the foundation — they provide the identity and access
+model that the event bus and storage layers build on. Tenant isolation at the
+Kubernetes API level is covered in detail under
+[Tenant Isolation](../multi-tenancy/tenant-isolation.md).

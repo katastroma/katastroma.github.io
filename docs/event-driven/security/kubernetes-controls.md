@@ -10,12 +10,13 @@ nav_order: 1
 - **ServiceAccount identity** — each service in the pipeline runs with its own
   dedicated SA. SA tokens authenticate to both the event bus and storage via the
   Kubernetes TokenReview API.
-- **Gatekeeper prevents tenant access to platform infrastructure** — tenant
-  deployer SAs cannot create resources in the platform namespace. Tenants cannot
-  deploy services that impersonate platform SAs. SA creation in `tenant-*`
-  namespaces must be restricted to grammateus (see
-  [open issue](../../tenant-isolation/namespace-enforcement.md)). Tenants have
-  no SA that the event bus or storage would recognize.
+- **Gatekeeper restricts tenant deployer SAs to their own namespaces** —
+  deployer SAs can only operate in namespaces labeled with their tenant
+  identity. The platform namespace has no tenant label — deployer SAs cannot
+  create resources there. Tenants cannot deploy services that impersonate
+  platform SAs. Tenants have no SA that the event bus or storage would
+  recognize. See [Tenant Isolation](../../multi-tenancy/tenant-isolation.md) for
+  the full trust chain.
 - **RBAC restricts platform Secrets** — event bus and storage admin credentials
   are Kubernetes Secrets in the platform namespace, accessible only to platform
   SAs. Compromise of admin credentials is a full platform compromise scenario.

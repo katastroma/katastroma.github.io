@@ -6,9 +6,8 @@ nav_order: 0
 
 # Katastroma
 
-Source event-driven platform for Kubernetes. Multi-cluster and multi-tenant
-support and tenant isolation through Kubernetes-native RBAC, impersonation, and
-admission control.
+Source event-driven platform for Kubernetes. Multi-tenant support and tenant
+isolation through Kubernetes-native RBAC, impersonation, and admission control.
 
 # Architecture
 
@@ -24,6 +23,10 @@ GitOps has 5 operations:
 
 # Components
 
+Interface repos define client-facing gRPC APIs. Clients depend on the interface
+without importing the implementation. Implementation repos consume the interface
+and provide the concrete service.
+
 | Component                                                | Role                         |
 | -------------------------------------------------------- | ---------------------------- |
 | [grammateus](https://github.com/katastroma/grammateus)   | Tenant management API server |
@@ -35,8 +38,14 @@ GitOps has 5 operations:
 | [stolarches](https://github.com/katastroma/stolarches)   | Orderer implementation       |
 | [katartismos](https://github.com/katastroma/katartismos) | Provisioner interface        |
 | [histia](https://github.com/katastroma/histia)           | Provisioner implementation   |
+| [pharos](https://github.com/katastroma/pharos)           | Pipeline observability       |
 
 # Deployment
+
+All platform resources run in the **platform namespace** (default `katastroma`,
+configurable). Tenant resources are in namespaces labeled with the tenant
+identity. The platform namespace is where all platform services, the event bus,
+shared storage, Gatekeeper, and platform Secrets reside.
 
 The platform is deployed as Helm charts via
 [phortion](https://github.com/katastroma/phortion):

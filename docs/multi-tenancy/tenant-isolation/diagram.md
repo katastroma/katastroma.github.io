@@ -1,14 +1,15 @@
 ---
 title: Diagram
 parent: Tenant Isolation
-nav_order: 7
+grand_parent: Multi-Tenancy
+nav_order: 1
 ---
 
 # Cluster Diagram
 
 ```
 CLUSTER
-  ├── platform namespace
+  ├── platform namespace (katastroma)
   │   ├── grammateus (tenant API server)
   │   ├── source handler APIs (receive source events, fetch source)
   │   ├── keleustes implementations (render manifests from source)
@@ -26,35 +27,36 @@ CLUSTER
   │   ├── ClusterRole: globex-deployer (create, patch, delete on *)
   │   └── ClusterRoleBinding: globex-deployer → SA tenant-globex/globex-deployer
   │
-  ├── tenant-acme namespace (root tenant)
-  │   ├── ServiceAccount: acme-deployer (grammateus)
+  ├── tenant-acme namespace (label: katastroma.io/tenant=acme, root tenant)
+  │   ├── ServiceAccount: acme-deployer (created by grammateus)
   │   ├── Secret: webhook-secret (source handler API)
   │   ├── ConfigMap: watch-target (source handler API)
   │   └── Secret: repo-credentials (source handler API)
   │
-  ├── tenant-acme-dev namespace (child, ownerRef → tenant-acme)
-  │   ├── ServiceAccount: acme-dev-deployer (grammateus)
+  ├── tenant-acme-dev namespace (label: katastroma.io/tenant=acme-dev, ownerRef → tenant-acme)
+  │   ├── ServiceAccount: acme-dev-deployer (created by grammateus)
   │   ├── Secret: webhook-secret (source handler API)
   │   ├── ConfigMap: watch-target (source handler API)
   │   └── Secret: repo-credentials (source handler API)
   │
-  ├── tenant-globex namespace (root tenant)
-  │   ├── ServiceAccount: globex-deployer (grammateus)
+  ├── tenant-globex namespace (label: katastroma.io/tenant=globex, root tenant)
+  │   ├── ServiceAccount: globex-deployer (created by grammateus)
   │   ├── Secret: webhook-secret (source handler API)
   │   ├── ConfigMap: watch-target (source handler API)
   │   └── Secret: repo-credentials (source handler API)
   │
-  ├── acme-prod namespace (provisioned by histia from tenant manifests, impersonating acme-deployer)
+  ├── production namespace (label: katastroma.io/tenant=acme, provisioned by histia impersonating acme-deployer)
   │   └── [acme's workload pods, services, etc.]
   │
-  ├── acme-dev-staging namespace (provisioned by histia from tenant manifests, impersonating acme-dev-deployer)
+  ├── staging namespace (label: katastroma.io/tenant=acme-dev, provisioned by histia impersonating acme-dev-deployer)
   │   └── [acme-dev's workloads]
   │
-  ├── globex-app namespace (provisioned by histia from tenant manifests, impersonating globex-deployer)
+  ├── globex-app namespace (label: katastroma.io/tenant=globex, provisioned by histia impersonating globex-deployer)
   │   └── [globex's workloads]
   │
-  └── GATEKEEPER POLICIES (cluster-wide, not per-tenant)
-      ├── Policy: SAs can only create namespaces matching their tenant prefix
-      ├── Policy: resources in a namespace can only be modified by an SA whose prefix matches
-      └── Policy: tenant deployer SAs cannot create ClusterRoles or ClusterRoleBindings
+  └── GATEKEEPER POLICIES (cluster-wide)
+      ├── Policy: katastroma.io/tenant label is immutable after creation
+      ├── Policy: deployer SAs can only operate in namespaces matching their tenant identity label
+      ├── Policy: deployer SAs must label all created resources with their tenant identity
+      └── Policy: deployer SAs cannot create ClusterRoles or ClusterRoleBindings
 ```
