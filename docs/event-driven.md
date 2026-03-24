@@ -13,8 +13,9 @@ The platform decomposes GitOps into discrete stages connected by gRPC streaming.
 Each stage receives data from the previous stage, does its work, and streams the
 result to the next. Data flows forward only — no stage calls backward.
 
-**Data flow** (gRPC streaming): [Source Handler](event-driven/source-handler.md)
-→ [Renderer](event-driven/renderer.md) → [Orderer](event-driven/orderer.md) →
+**Data flow** (gRPC streaming): Source event →
+[Source Handler](event-driven/source-handler.md) →
+[Renderer](event-driven/renderer.md) → [Orderer](event-driven/orderer.md) →
 [Provisioner](event-driven/provisioner.md)
 
 **Telemetry**: Each stage → OTel Collector
@@ -46,12 +47,6 @@ stage scales independently.
 Each stage writes telemetry to the OpenTelemetry collector. Each pipeline run is
 a trace. Each stage is a span. The trace ID propagates through gRPC metadata
 across the entire pipeline.
-
-## Coordination
-
-The collector serves as both the observability backend and the coordination
-layer. The OTel collector routes failed spans to pharos for
-[failure recovery](#failure-recovery).
 
 ## Tenant-Facing Observability
 
