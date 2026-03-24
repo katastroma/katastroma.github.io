@@ -3,5 +3,11 @@ description: Source event-driven platform for Kubernetes
 remote_theme: just-the-docs/just-the-docs
 url: https://katastroma.org
 
+gh_edit_link: false
+
+aux_links:
+  GitHub:
+    - https://github.com/katastroma
+
 plugins:
   - jekyll-remote-theme
