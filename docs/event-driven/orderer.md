@@ -6,7 +6,11 @@ nav_order: 3
 
 # Orderer
 
-Orderer sorts manifests using a sorting algorithm.
+The orderer receives unordered Kubernetes manifests from the renderer via gRPC
+streaming and sorts them into a safe apply order. The sorting algorithm
+determines resource dependencies and sequences resources so that prerequisites
+are applied before dependents.
 
-**TODO**: Expand on `helm`'s sorter or k8s GVK as sorting algorithm
-implementation services. Uses libraries directly - does not shell out.
+Orderer implementations use sorting libraries directly — no shell execution. The
+[diataxis](https://github.com/katastroma/diataxis) interface defines the gRPC
+contract.

@@ -11,7 +11,11 @@ configured [Watch Targets](#watch-targets) set by the tenant.
 
 # Registration
 
-**TODO**
+Tenants register [watch targets](#watch-targets) and any required credentials
+with source handler APIs. Registration stores these as Kubernetes resources in
+the tenant namespace — ConfigMaps for watch targets, Secrets for credentials.
+What credentials are required (if any) depends on the source type and whether
+the source is private.
 
 # Source Events
 

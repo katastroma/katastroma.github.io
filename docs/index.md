@@ -32,7 +32,7 @@ and provide the concrete service.
 | [grammateus](https://github.com/katastroma/grammateus)   | Tenant management API server          |
 | [prora](https://github.com/katastroma/prora)             | Tenant self-service frontend          |
 | [naukleros](https://github.com/katastroma/naukleros)     | Source handler interface              |
-| [phortizo](https://github.com/katastroma/phortizo)       | Source handler implementation(GitHub) |
+| [phortizo](https://github.com/katastroma/phortizo)       | Source handler implementation (GitHub) |
 | [keleustēs](https://github.com/katastroma/keleustes)     | Renderer interface                    |
 | [orpheus](https://github.com/katastroma/orpheus)         | Renderer implementation               |
 | [diataxis](https://github.com/katastroma/diataxis)       | Orderer interface                     |

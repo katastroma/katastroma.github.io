@@ -139,8 +139,8 @@ Three controls complete the isolation:
   RoleBindings that grant more permissions than the SA itself has. Even within
   namespaces the tenant owns, it cannot escalate.
 
-  **Enforced by:** Kubernetes API server — built-in, enforced even without the
-  RBAC authorizer.
+  **Enforced by:** Kubernetes RBAC authorizer (enabled by default in all modern
+  clusters).
   ([Kubernetes: Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
   — "The RBAC API prevents users from escalating privileges by editing roles or
   role bindings")

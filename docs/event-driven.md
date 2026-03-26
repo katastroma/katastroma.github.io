@@ -45,9 +45,10 @@ tenants visibility into which source triggered each run.
 ## Run Ownership
 
 Each pipeline run is associated with a watch target. The watch target's
-Kubernetes ConfigMap carries a lease annotation (`katastroma.org/active-run`)
-that tracks which run currently owns the watch target. The annotation contains
-the run ID, a timestamp, and a replay count.
+Kubernetes ConfigMap carries lease annotations that track which run currently
+owns the watch target: a run ID (`katastroma.org/active-run-id`), a timestamp
+(`katastroma.org/active-run-started`), and a replay count
+(`katastroma.org/active-run-replay-count`).
 
 The source handler acquires the lease before starting the pipeline. New
 webhook-triggered runs always acquire the lease because they represent the latest
