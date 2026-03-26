@@ -53,10 +53,11 @@ watch target using the span attributes from the original trace.
 
 # Replay Prevention
 
-Before starting the source retrieval, the source handler queries the OTel
-collector to check:
+Before replaying, the source handler checks the
+[run ownership](../event-driven.md#run-ownership) lease on the watch target
+ConfigMap:
 
-- Is there already an in-flight run for this watch target? If yes, skip — the
-  newer run supersedes.
-- How many times has this run been replayed? If over the limit, report a
+- If a run is currently active (lease held and not stale), skip — the active run
+  supersedes this replay.
+- If the replay count for this run ID exceeds the configured maximum, report a
   permanent failure.

@@ -42,6 +42,26 @@ pipeline run status and history. Tenants see their runs in Grafana, scoped by
 tenant identity. Watch target attributes on the source handler's span give
 tenants visibility into which source triggered each run.
 
+## Run Ownership
+
+Each pipeline run is associated with a watch target. The watch target's
+Kubernetes ConfigMap carries a lease annotation (`katastroma.org/active-run`)
+that tracks which run currently owns the watch target. The annotation contains
+the run ID, a timestamp, and a replay count.
+
+The source handler acquires the lease before starting the pipeline. New
+webhook-triggered runs always acquire the lease because they represent the latest
+source state. Replays only proceed if no run is currently active.
+
+Before streaming to the renderer, the source handler verifies it still holds the
+lease. If another run has taken ownership, the current run is abandoned — clone
+work is discarded but stale data never reaches downstream stages.
+
+The [provisioner](event-driven/provisioner.md#stale-run-prevention) performs a
+second ownership check before applying manifests to the cluster. This provides
+defense in depth against stale runs that pass the source handler's check due to
+timing.
+
 ## Failure Recovery
 
 When pharos receives a failed span, it follows the trace lineage to obtain the
