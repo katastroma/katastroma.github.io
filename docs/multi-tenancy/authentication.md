@@ -22,7 +22,7 @@ Authorization determines what a tenant can do and see. This includes:
 - Which tenant namespaces a caller can operate on
 - Parent-to-child tenant resource visibility (a parent tenant can query child
   tenant resources, scoped by the namespace hierarchy)
-- Source handler API access — registering watch targets and credentials for a
+- Source handler API access — registering source targets and credentials for a
   tenant requires authorization as that tenant
 
 ## Queries

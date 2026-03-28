@@ -13,7 +13,7 @@ nav_order: 1
    [Trust Chain](tenant-isolation.md#trust-chain) for why this ordering matters)
 3. Grammateus creates a deployer ServiceAccount in the tenant namespace (see
    [SA Permissions](sa-permissions.md) for the permission model)
-4. Tenant configures the platform source handlers, watch targets, any necessary
+4. Tenant configures the platform source handlers, source targets, any necessary
    credentials with the source handler APIs
 5. Tenant configures their sources with any verifications needed to wire up
    sending events from their sources to the source handler APIs

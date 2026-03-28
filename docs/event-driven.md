@@ -35,65 +35,64 @@ Each stage writes telemetry to the OpenTelemetry collector. Each event is a
 trace. Each stage is a span. The trace ID propagates through gRPC metadata
 across all stages.
 
-### Tenant-Facing Observability
-
 ## Registration
 
-Tenants register [watch targets](#watch-targets) and any required credentials
+Tenants register [source targets](#source-targets) and any required credentials
 with source handler APIs. Registration stores these as Kubernetes resources in
-the tenant namespace — ConfigMaps for watch targets, Secrets for credentials.
-What credentials are required (if any) depends on the source type and whether
-the source is private.
+the tenant namespace — ConfigMaps for source targets, Secrets for credentials.
+Credential Secrets are in the tenant namespace and protected by the same
+[label-based isolation](multi-tenancy/tenant-isolation.md) as all tenant
+resources. What credentials are required (if any) depends on the source type and
+whether the source is private.
 
 Grafana queries the OTel collector and serves tenant-scoped dashboards showing
 event status and history. Tenants see their events in Grafana, scoped by tenant
-identity. Watch target attributes on the source handler's span give tenants
-visibility into which source triggered each event.
+identity. Source target attributes on each source target's child span give
+tenants visibility into which source triggered each event.
 
-## Watch Targets
+## Source Targets
 
-A watch target represents a source identity. The structure depends on the source
-type — a git repo URL, ref, and path for a GitHub source handler, a container
-registry URL and tag pattern for a container registry handler, a prefix for an
-S3 handler, etc.
+A source target represents a source identity. The structure depends on the
+source type — a git repo URL, ref, and path for a GitHub source handler, a
+container registry URL and tag pattern for a container registry handler, a
+prefix for an S3 handler, etc.
 
-Tenants [register](#registration) watch targets with source handler APIs.
+Tenants [register](#registration) source targets with source handler APIs.
 
 When a source event arrives, the source handler matches it against registered
-watch targets to determine if processing is needed. If no watch target
+source targets to determine if processing is needed. If no source target
 matches, the event is ignored.
 
-## Events and Watch Target Processing
+## Events and Source Target Processing
 
 An event is the top-level trigger — a webhook push, a manual retrieve, or a
 replay. Each event has an event ID (the OTel trace ID) and processes one or more
-watch targets. Each watch target is processed independently as a child span of
+source targets. Each source target is processed independently as a child span of
 the event.
 
 The event entrypoint (webhook handler, Retrieve RPC, or Replay RPC) creates the
 OTel tracer, starts the root event span, and passes both the tracer and the
-context to the watch target handler. The handler creates a child span scoped to
-that specific watch target.
+context to the source target handler. The handler creates a child span scoped to
+that specific source target.
 
-## Watch Target Leasing
+## Source Target Leasing
 
-Each watch target's Kubernetes ConfigMap carries lease annotations that track
-which processing instance currently owns the watch target: a watch target lease
-ID (`katastroma.org/watch-target-lease-id`), a timestamp
-(`katastroma.org/watch-target-lease-started`), and a replay count
-(`katastroma.org/watch-target-lease-replay-count`).
+Each source target's Kubernetes ConfigMap carries lease annotations that track
+which processing instance currently owns the source target: a lease ID
+(`katastroma.org/lease-id`), a timestamp (`katastroma.org/lease-started`), and a
+replay count (`katastroma.org/lease-replay-count`).
 
-The watch target lease ID is the OTel span ID of the watch target processor's
-span — unique per watch target per event. The event ID (trace ID) and the watch
-target lease ID (span ID) are decoupled: the event groups all watch targets
-processed together, while the lease identifies the specific processing instance
-for a single watch target.
+The lease ID is the OTel span ID of the source target processor's span — unique
+per source target per event. The event ID (trace ID) and the source target lease
+ID (span ID) are decoupled: the event groups all source targets processed
+together, while the lease identifies the specific processing instance for a
+single source target.
 
-Each watch target processor acquires the lease at the start of processing. New
+Each source target processor acquires the lease at the start of processing. New
 webhook-triggered events always acquire the lease because they represent the
 latest source state. Replays only proceed if no lease is currently active.
 
-Before streaming to the renderer, each watch target processor verifies it still
+Before streaming to the renderer, each source target processor verifies it still
 holds the lease. If a newer processor has acquired the lease, the current
 processor is abandoned — clone work is discarded but stale data never reaches
 downstream stages. The [provisioner](event-driven/provisioner.md) performs the

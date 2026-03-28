@@ -30,19 +30,19 @@ CLUSTER
   ├── tenant-acme namespace (label: katastroma.org/tenant=acme, root tenant)
   │   ├── ServiceAccount: acme-deployer (created by grammateus)
   │   ├── Secret: webhook-secret (source handler API)
-  │   ├── ConfigMap: watch-target (source handler API)
+  │   ├── ConfigMap: source-target (source handler API)
   │   └── Secret: repo-credentials (source handler API)
   │
   ├── tenant-acme-dev namespace (label: katastroma.org/tenant=acme-dev, ownerRef → tenant-acme)
   │   ├── ServiceAccount: acme-dev-deployer (created by grammateus)
   │   ├── Secret: webhook-secret (source handler API)
-  │   ├── ConfigMap: watch-target (source handler API)
+  │   ├── ConfigMap: source-target (source handler API)
   │   └── Secret: repo-credentials (source handler API)
   │
   ├── tenant-globex namespace (label: katastroma.org/tenant=globex, root tenant)
   │   ├── ServiceAccount: globex-deployer (created by grammateus)
   │   ├── Secret: webhook-secret (source handler API)
-  │   ├── ConfigMap: watch-target (source handler API)
+  │   ├── ConfigMap: source-target (source handler API)
   │   └── Secret: repo-credentials (source handler API)
   │
   ├── production namespace (label: katastroma.org/tenant=acme, provisioned by histia impersonating acme-deployer)
