@@ -12,8 +12,8 @@ to retrieve and process.
 
 # Source Events
 
-When a source handler receives a source event, it processes event through the
-following pipeline:
+When a source handler receives a source event, it processes the event through
+the following pipeline:
 
 1. Verify the event against tenant-stored secrets
 2. Match the event against registered source targets
