@@ -18,6 +18,11 @@ result to the next. Data flows forward only — no stage calls backward.
 [Renderer](event-driven/renderer.md) → [Orderer](event-driven/orderer.md) →
 [Provisioner](event-driven/provisioner.md)
 
+The source handler resolves tenant credentials to retrieve source content, then
+streams the content forward. The renderer, orderer, and provisioner operate on
+content only. Rendering and ordering stages use libraries to process content
+directly.
+
 **Telemetry**: Each stage → OTel Collector
 
 **Coordination/Failure Detection**: Any stage failure → OTel Collector →

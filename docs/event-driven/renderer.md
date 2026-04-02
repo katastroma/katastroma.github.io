@@ -11,6 +11,7 @@ and produces Kubernetes manifests. The rendering algorithm depends on the source
 type detected by the source handler (Helm chart, Kustomize overlay, or raw
 YAML).
 
-Renderer implementations use rendering libraries directly — no shell execution.
+The renderer streams produced manifests to the [orderer](orderer.md).
+
 The [keleustēs](https://github.com/katastroma/keleustes) interface defines the
 gRPC contract.
