@@ -11,17 +11,14 @@ embeds an OTLP receiver. The OTel collector routes failed spans to pharos.
 
 The platform decomposes GitOps into discrete stages connected by gRPC streaming.
 Each stage receives data from the previous stage, does its work, and streams the
-result to the next. Data flows forward only — no stage calls backward.
+result to the next. All RPCs use bidirectional streaming.
 
 **Data flow** (gRPC streaming): Source event →
 [Source Handler](event-driven/source-handler.md) →
 [Renderer](event-driven/renderer.md) → [Orderer](event-driven/orderer.md) →
-[Provisioner](event-driven/provisioner.md)
-
-The source handler resolves tenant credentials to retrieve source content, then
-streams the content forward. The renderer, orderer, and provisioner operate on
-content only. Rendering and ordering stages use libraries to process content
-directly.
+[Labeler](event-driven/labeler.md) →
+[Provisioner](event-driven/provisioner.md) →
+[Pruner](event-driven/pruner.md)
 
 **Telemetry**: Each stage → OTel Collector
 
@@ -37,8 +34,8 @@ stage scales independently.
 ## Observability
 
 Each stage writes telemetry to the OpenTelemetry collector. Each event is a
-trace. Each stage is a span. The trace ID propagates through gRPC metadata
-across all stages.
+trace. Each stage is a span. OTel trace context and baggage propagate across all
+stages.
 
 ## Registration
 
@@ -100,8 +97,9 @@ latest source state. Replays only proceed if no lease is currently active.
 Before streaming to the renderer, each source target processor verifies it still
 holds the lease. If a newer processor has acquired the lease, the current
 processor is abandoned — clone work is discarded but stale data never reaches
-downstream stages. The [provisioner](event-driven/provisioner.md) performs the
-same check before applying manifests.
+downstream stages. The [provisioner](event-driven/provisioner.md) and
+[pruner](event-driven/pruner.md) perform the same check before applying or
+removing resources.
 
 ## Failure Recovery
 

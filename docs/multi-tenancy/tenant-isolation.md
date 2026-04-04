@@ -20,12 +20,12 @@ it. If any link breaks, everything below it is compromised.
         ↓
 2. Label immutability (Gatekeeper — no one can modify katastroma.org/tenant after creation)
         ↓
-3. Tenant namespace label (set by grammateus before deployer SA exists — protected by #2)
+3. Tenant namespace label (set by grammateus before tenant SAs exist — protected by #2)
         ↓
 4. Identity derivation (Gatekeeper — derives tenant identity from SA's namespace label)
         ↓
-5. Namespace ownership (Gatekeeper — deployer SA can only operate in namespaces
-   labeled with its tenant identity)
+5. Namespace ownership (Gatekeeper — tenant SAs can only operate in namespaces
+   labeled with their tenant identity)
         ↓
 6. Resource isolation (RBAC + Gatekeeper — no read, no ClusterRoleBindings,
    escalation prevention)
@@ -58,20 +58,20 @@ On CREATE, `oldObject` is null — the initial label is allowed.
 ### Link 3: Tenant Namespace Label
 
 Grammateus creates the tenant namespace and sets the `katastroma.org/tenant`
-label **before** creating the deployer SA. The label exists before the SA
-exists. The SA never had an opportunity to influence its own identity — and
-because the label is immutable (Link 2), it never will.
+label **before** creating the tenant SAs. The label exists before the SAs
+exist. The SAs never had an opportunity to influence their own identity — and
+because the label is immutable (Link 2), they never will.
 
 **Enforced by:** Platform onboarding sequence (grammateus). This is an ordering
 guarantee in the onboarding flow, protected by label immutability.
 
 ### Link 4: Identity Derivation
 
-When a deployer SA makes any request, Gatekeeper extracts the SA's namespace
+When a tenant SA makes any request, Gatekeeper extracts the SA's namespace
 from `input.review.userInfo.username`, looks up that namespace in the synced
 resource cache, and reads its `katastroma.org/tenant` label. This is the SA's
 tenant identity. Because the label is immutable (Link 2) and was set before the
-SA existed (Link 3), the deployer SA cannot influence the identity Gatekeeper
+SA existed (Link 3), the tenant SA cannot influence the identity Gatekeeper
 derives.
 
 **Enforced by:** Gatekeeper — two capabilities:
@@ -92,15 +92,15 @@ through the constraint at creation time.
 
 ### Link 5: Namespace Ownership
 
-Gatekeeper validates every deployer SA operation against the target namespace's
+Gatekeeper validates every tenant SA operation against the target namespace's
 tenant label:
 
 - **Creating a namespace** — the incoming resource must have a
   `katastroma.org/tenant` label matching the SA's derived identity. No label or
   wrong label → rejected.
-- **Creating or modifying resources in a namespace** — the target namespace's
-  `katastroma.org/tenant` label must match the SA's derived identity. Mismatch →
-  rejected.
+- **Creating, modifying, or deleting resources in a namespace** — the target
+  namespace's `katastroma.org/tenant` label must match the SA's derived
+  identity. Mismatch → rejected.
 
 Namespace names are not checked. A tenant can create a namespace called anything
 — `production`, `my-app`, `foo` — as long as it's labeled with the tenant's
@@ -119,17 +119,17 @@ derivation (Link 4) with incoming resource labels
 
 Three controls complete the isolation:
 
-- **No read permissions** — deployer SAs have `create`, `patch`, and `delete`
-  only. No `get`, `list`, or `watch`. A deployer SA cannot discover or read
-  resources in any namespace, including its own. Cross-tenant read isolation is
-  enforced by the absence of read verbs, not by namespace boundaries.
+- **No read permissions** — tenant SAs have no `get`, `list`, or `watch`. A
+  tenant SA cannot discover or read resources in any namespace, including its
+  own. Cross-tenant read isolation is enforced by the absence of read verbs, not
+  by namespace boundaries.
 
   **Enforced by:** Kubernetes RBAC — verbs are explicit, RBAC is additive-only.
   ([Kubernetes: Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/))
 
 - **No ClusterRole or ClusterRoleBinding creation** — Gatekeeper blocks tenant
-  deployer SAs from creating these cluster-scoped RBAC resources. A tenant
-  cannot grant itself or any SA broader permissions.
+  SAs from creating these cluster-scoped RBAC resources. A tenant cannot grant
+  itself or any SA broader permissions.
 
   **Enforced by:** Gatekeeper custom ConstraintTemplate matching on resource
   kind + `input.review.userInfo.username`.
@@ -147,12 +147,12 @@ Three controls complete the isolation:
 
 ## Impersonation
 
-Histia runs with its own platform SA in the platform namespace. When applying
-manifests for a tenant, histia impersonates the tenant's deployer SA using
-Kubernetes impersonation (Impersonate-User HTTP headers). The Kubernetes API
-server authenticates histia first, then switches to the impersonated identity.
-Authorization is evaluated against the impersonated SA's constraints — not
-histia's.
+The provisioner and pruner run with their own platform SAs in the platform
+namespace. When operating on tenant resources, they impersonate the
+corresponding tenant SA using Kubernetes impersonation (Impersonate-User HTTP
+headers). The Kubernetes API server authenticates the platform SA first, then
+switches to the impersonated identity. Authorization is evaluated against the
+impersonated SA's constraints — not the platform SA's.
 
 **Enforced by:** Kubernetes API server impersonation.
 ([Kubernetes: User Impersonation](https://kubernetes.io/docs/reference/access-authn-authz/user-impersonation/)
@@ -161,17 +161,16 @@ evaluated, with authorization acting on the impersonated user info.")
 
 ## Resource Ownership
 
-Every resource provisioned by histia is labeled with the tenant identity
-(`katastroma.org/tenant`). Resources are additionally labeled with platform
-labels ([see `katartismos`](https://github.com/katastroma/katartismos)). These
-labels are the ownership record — used for pruning, querying, and the isolation
-enforcement described above.
+Every provisioned resource is labeled with the tenant identity
+(`katastroma.org/tenant`) and source target identity by the
+[labeler](../event-driven/labeler.md). These labels are the ownership record —
+used for pruning, querying, and the isolation enforcement described above.
 
 ## Cluster-Scoped Resources
 
-The deployer SA's ClusterRole uses `*` for resources so tenants can provision
-custom resources from any CRD. Gatekeeper blocks tenant deployer SAs from
-creating dangerous cluster-scoped resources:
+Tenant SA ClusterRoles use `*` for resources so tenants can provision custom
+resources from any CRD. Gatekeeper blocks tenant SAs from creating dangerous
+cluster-scoped resources:
 
 - ClusterRoles
 - ClusterRoleBindings
@@ -191,13 +190,12 @@ Candidate mitigations:
 
 ## What Gatekeeper Prevents
 
-- Any deployer SA creating or modifying resources in a namespace labeled with a
-  different tenant identity → rejected
-- Any deployer SA creating a namespace without a matching tenant label →
-  rejected
+- Any tenant SA creating, modifying, or deleting resources in a namespace
+  labeled with a different tenant identity → rejected
+- Any tenant SA creating a namespace without a matching tenant label → rejected
 - Any mutation to the `katastroma.org/tenant` label after resource creation →
   rejected
-- Any deployer SA creating ClusterRoles or ClusterRoleBindings → rejected
+- Any tenant SA creating ClusterRoles or ClusterRoleBindings → rejected
 - Any non-grammateus SA creating ServiceAccounts in tenant namespaces → rejected
 
 ## SA Creation in Tenant Namespaces
@@ -224,15 +222,15 @@ request is rejected.
 Kubernetes warns that any user with write access to Secrets can request a token,
 and any user with read access to Secrets can authenticate as the service account
 ([Kubernetes: Managing Service Accounts](https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/)).
-The deployer SA has `create`, `patch`, and `delete` on all resources, which
+The tenant provisioner SA has `create` and `patch` on all resources, which
 includes Secrets. This risk is contained by the isolation model:
 
-- **Cannot read tokens** — the deployer SA has no `get`, `list`, or `watch`. It
+- **Cannot read tokens** — tenant SAs have no `get`, `list`, or `watch`. They
   cannot read any existing SA token Secrets.
-- **Cannot create tokens outside its namespaces** —
+- **Cannot create tokens outside their namespaces** —
   `kubernetes.io/service-account-token` Secrets must be in the same namespace as
-  the SA they reference. Gatekeeper blocks the deployer SA from creating Secrets
-  in any namespace not labeled with its tenant identity. It cannot mint tokens
+  the SA they reference. Gatekeeper blocks tenant SAs from creating Secrets in
+  any namespace not labeled with their tenant identity. They cannot mint tokens
   for platform SAs or other tenants' SAs.
 - **Tokens within tenant namespaces are contained** — any SA in a namespace
   labeled with a tenant's identity inherits that tenant identity. A token

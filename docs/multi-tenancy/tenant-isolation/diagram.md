@@ -14,49 +14,60 @@ CLUSTER
   │   ├── source handler APIs (receive source events, fetch source)
   │   ├── keleustes implementations (render manifests from source)
   │   ├── diataxis implementations (order manifests for safe apply)
+  │   ├── akrostolion implementations (label manifests with source target identity)
   │   ├── katartismos implementations (provision resources from manifests via impersonation)
+  │   ├── ekbole implementations (prune resources no longer in the manifest set via impersonation)
   │   ├── pharos (pipeline coordinator)
   │   ├── OTel collector (telemetry)
   │   └── gatekeeper (admission control)
   │
   ├── CLUSTER-SCOPED RBAC (per tenant, created by grammateus)
-  │   ├── ClusterRole: acme-deployer (create, patch, delete on *)
-  │   ├── ClusterRoleBinding: acme-deployer → SA tenant-acme/acme-deployer
-  │   ├── ClusterRole: acme-dev-deployer (create, patch, delete on *)
-  │   ├── ClusterRoleBinding: acme-dev-deployer → SA tenant-acme-dev/acme-dev-deployer
-  │   ├── ClusterRole: globex-deployer (create, patch, delete on *)
-  │   └── ClusterRoleBinding: globex-deployer → SA tenant-globex/globex-deployer
+  │   ├── ClusterRole: acme-provisioner (create, patch on *)
+  │   ├── ClusterRoleBinding: acme-provisioner → SA tenant-acme/provisioner
+  │   ├── ClusterRole: acme-pruner (delete on *)
+  │   ├── ClusterRoleBinding: acme-pruner → SA tenant-acme/pruner
+  │   ├── ClusterRole: acme-dev-provisioner (create, patch on *)
+  │   ├── ClusterRoleBinding: acme-dev-provisioner → SA tenant-acme-dev/provisioner
+  │   ├── ClusterRole: acme-dev-pruner (delete on *)
+  │   ├── ClusterRoleBinding: acme-dev-pruner → SA tenant-acme-dev/pruner
+  │   ├── ClusterRole: globex-provisioner (create, patch on *)
+  │   ├── ClusterRoleBinding: globex-provisioner → SA tenant-globex/provisioner
+  │   ├── ClusterRole: globex-pruner (delete on *)
+  │   └── ClusterRoleBinding: globex-pruner → SA tenant-globex/pruner
   │
   ├── tenant-acme namespace (label: katastroma.org/tenant=acme, root tenant)
-  │   ├── ServiceAccount: acme-deployer (created by grammateus)
+  │   ├── ServiceAccount: provisioner (created by grammateus)
+  │   ├── ServiceAccount: pruner (created by grammateus)
   │   ├── Secret: webhook-secret (source handler API)
   │   ├── ConfigMap: source-target (source handler API)
   │   └── Secret: repo-credentials (source handler API)
   │
   ├── tenant-acme-dev namespace (label: katastroma.org/tenant=acme-dev, ownerRef → tenant-acme)
-  │   ├── ServiceAccount: acme-dev-deployer (created by grammateus)
+  │   ├── ServiceAccount: provisioner (created by grammateus)
+  │   ├── ServiceAccount: pruner (created by grammateus)
   │   ├── Secret: webhook-secret (source handler API)
   │   ├── ConfigMap: source-target (source handler API)
   │   └── Secret: repo-credentials (source handler API)
   │
   ├── tenant-globex namespace (label: katastroma.org/tenant=globex, root tenant)
-  │   ├── ServiceAccount: globex-deployer (created by grammateus)
+  │   ├── ServiceAccount: provisioner (created by grammateus)
+  │   ├── ServiceAccount: pruner (created by grammateus)
   │   ├── Secret: webhook-secret (source handler API)
   │   ├── ConfigMap: source-target (source handler API)
   │   └── Secret: repo-credentials (source handler API)
   │
-  ├── production namespace (label: katastroma.org/tenant=acme, provisioned by histia impersonating acme-deployer)
+  ├── production namespace (label: katastroma.org/tenant=acme, provisioned via impersonation)
   │   └── [acme's workload pods, services, etc.]
   │
-  ├── staging namespace (label: katastroma.org/tenant=acme-dev, provisioned by histia impersonating acme-dev-deployer)
+  ├── staging namespace (label: katastroma.org/tenant=acme-dev, provisioned via impersonation)
   │   └── [acme-dev's workloads]
   │
-  ├── globex-app namespace (label: katastroma.org/tenant=globex, provisioned by histia impersonating globex-deployer)
+  ├── globex-app namespace (label: katastroma.org/tenant=globex, provisioned via impersonation)
   │   └── [globex's workloads]
   │
   └── GATEKEEPER POLICIES (cluster-wide)
       ├── Policy: katastroma.org/tenant label is immutable after creation
-      ├── Policy: deployer SAs can only operate in namespaces matching their tenant identity label
-      ├── Policy: deployer SAs must label all created resources with their tenant identity
-      └── Policy: deployer SAs cannot create ClusterRoles or ClusterRoleBindings
+      ├── Policy: tenant SAs can only operate in namespaces matching their tenant identity label
+      ├── Policy: tenant SAs must label all created resources with their tenant identity
+      └── Policy: tenant SAs cannot create ClusterRoles or ClusterRoleBindings
 ```

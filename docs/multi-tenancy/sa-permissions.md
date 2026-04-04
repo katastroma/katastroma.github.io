@@ -6,40 +6,61 @@ nav_order: 4
 
 # SA Permissions
 
-## Deployer SA
+## Platform SAs
 
-Grammateus creates a deployer SA per tenant during onboarding with:
+Platform services run with their own SAs in the platform namespace.
 
-- A ClusterRole granting `create`, `patch`, and `delete` on all resources (`*`)
-  — `create` and `patch` for SSA, `delete` for pruning
-- A ClusterRoleBinding binding the SA to the ClusterRole
+**Provisioner SA** has `impersonate` on ServiceAccounts — to impersonate tenant
+provisioner SAs for server-side apply operations.
 
-No `read` permissions — deployer SAs have `create`, `patch`, and `delete` only.
-No `get`, `list`, or `watch`. A deployer SA cannot discover or read resources in
-any namespace. Cross-tenant read isolation is enforced by the absence of read
-verbs, not by namespace boundaries.
+**Pruner SA** has `list` on all resources — to query the cluster by label for
+pruning diffs — and `impersonate` on ServiceAccounts — to impersonate tenant
+pruner SAs for delete operations.
 
-Gatekeeper constrains where the SA can operate using label-based namespace
+## Tenant SAs
+
+Grammateus creates two SAs per tenant during onboarding:
+
+### Provisioner SA
+
+A ClusterRole granting `create` and `patch` on all resources (`*`) — the verbs
+required for server-side apply
+([Kubernetes: Server-Side Apply](https://kubernetes.io/docs/reference/using-api/server-side-apply/)).
+
+The provisioner impersonates this SA via
+[impersonation](tenant-isolation.md#impersonation) when provisioning.
+
+### Pruner SA
+
+A ClusterRole granting `delete` on all resources (`*`).
+
+The pruner impersonates this SA via
+[impersonation](tenant-isolation.md#impersonation) when pruning.
+
+### Constraints
+
+Neither tenant SA has read permissions — no `get`, `list`, or `watch`. A tenant
+SA cannot discover or read resources in any namespace. Cross-tenant read
+isolation is enforced by the absence of read verbs, not by namespace boundaries.
+
+Gatekeeper constrains where each SA can operate using label-based namespace
 ownership — see [Tenant Isolation](tenant-isolation.md) for the full trust
 chain.
-
-Histia uses the deployer SA via
-[impersonation](tenant-isolation.md#impersonation) when provisioning.
 
 ## Workload SA Permissions
 
 Tenants can provision SAs in their workload namespaces as part of their
 manifests — for interactive access (bastion SAs), for workload identity, or any
-other purpose. Histia deploys these like any other resource.
+other purpose. The provisioner deploys these like any other resource.
 
 Any SA a tenant provisions is isolated by:
 
 1. **Namespace-scoped RBAC** — RoleBindings are namespace-scoped. A workload SA
    has zero permissions in any namespace it doesn't have a RoleBinding for.
-2. **Deployer SA containment** — the deployer SA can only create SAs and
-   RoleBindings in namespaces labeled with its tenant identity, so workload SAs
-   can only exist within the tenant's own namespaces (see
+2. **Tenant SA containment** — tenant SAs can only create SAs and RoleBindings
+   in namespaces labeled with its tenant identity, so workload SAs can only
+   exist within the tenant's own namespaces (see
    [Tenant Isolation](tenant-isolation.md)).
 3. **RBAC escalation prevention** — no SA can be granted broader permissions
-   than the deployer SA that created it. Workload SAs cannot exceed the deployer
-   SA's permissions.
+   than the SA that created it. Workload SAs cannot exceed the tenant SA's
+   permissions.
