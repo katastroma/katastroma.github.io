@@ -7,8 +7,12 @@ nav_order: 4
 # Labeler
 
 The labeler receives ordered manifests from the orderer and stamps each with
-platform labels identifying the source target. It reads the source target
-identity from OTel baggage.
+labels derived from OTel baggage. Applicable baggage entries are applied as
+labels on each manifest.
+
+**Open design point:** what constitutes an "applicable" baggage entry — the
+criteria by which the labeler selects which baggage keys to promote to labels —
+is not yet defined.
 
 The labeler streams each labeled manifest to the
 [provisioner](provisioner.md) as it arrives — no buffering.

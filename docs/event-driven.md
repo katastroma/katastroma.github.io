@@ -11,7 +11,7 @@ embeds an OTLP receiver. The OTel collector routes failed spans to pharos.
 
 The platform decomposes GitOps into discrete stages connected by gRPC streaming.
 Each stage receives data from the previous stage, does its work, and streams the
-result to the next. All RPCs use bidirectional streaming.
+result to the next. Each interface exposes both bidirectional streaming and client-streaming RPCs — consumers choose the pattern that fits.
 
 **Data flow** (gRPC streaming): Source event →
 [Source Handler](event-driven/source-handler.md) →

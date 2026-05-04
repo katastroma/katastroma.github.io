@@ -19,9 +19,17 @@ CLUSTER
   │   ├── ekbole implementations (prune resources no longer in the manifest set via impersonation)
   │   ├── pharos (pipeline coordinator)
   │   ├── OTel collector (telemetry)
-  │   └── gatekeeper (admission control)
+  │   ├── gatekeeper (admission control)
+  │   ├── ServiceAccount: platform-provisioner (used by katartismos implementations)
+  │   └── ServiceAccount: platform-pruner (used by ekbole implementations)
   │
-  ├── CLUSTER-SCOPED RBAC (per tenant, created by grammateus)
+  ├── PLATFORM CLUSTER-SCOPED RBAC
+  │   ├── ClusterRole: platform-provisioner (impersonate on serviceaccounts)
+  │   ├── ClusterRoleBinding: platform-provisioner → SA katastroma/platform-provisioner
+  │   ├── ClusterRole: platform-pruner (list on *, impersonate on serviceaccounts)
+  │   └── ClusterRoleBinding: platform-pruner → SA katastroma/platform-pruner
+  │
+  ├── TENANT CLUSTER-SCOPED RBAC (per tenant, created by grammateus)
   │   ├── ClusterRole: acme-provisioner (create, patch on *)
   │   ├── ClusterRoleBinding: acme-provisioner → SA tenant-acme/provisioner
   │   ├── ClusterRole: acme-pruner (delete on *)

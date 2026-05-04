@@ -6,35 +6,48 @@ nav_order: 4
 
 # SA Permissions
 
+Two distinct sets of ServiceAccounts exist: **platform SAs** that platform
+services run as, and **tenant SAs** that platform services impersonate when
+operating on tenant resources.
+
 ## Platform SAs
 
 Platform services run with their own SAs in the platform namespace.
 
-**Provisioner SA** has `impersonate` on ServiceAccounts — to impersonate tenant
-provisioner SAs for server-side apply operations.
+**Platform Provisioner SA** has `impersonate` on ServiceAccounts — to
+impersonate tenant provisioner SAs for server-side apply operations.
 
-**Pruner SA** has `list` on all resources — to query the cluster by label for
-pruning diffs — and `impersonate` on ServiceAccounts — to impersonate tenant
-pruner SAs for delete operations.
+**Platform Pruner SA** has `list` on all resources — to query the cluster by
+label for pruning diffs — and `impersonate` on ServiceAccounts — to impersonate
+tenant pruner SAs for delete operations.
+
+The labeler has no platform SA — it transforms manifests in-flight and does not
+interact with the Kubernetes API.
 
 ## Tenant SAs
 
-Grammateus creates two SAs per tenant during onboarding:
+Grammateus creates two SAs per tenant during onboarding, both in the tenant
+namespace, with fixed names.
 
-### Provisioner SA
+### Tenant Provisioner SA
+
+Named `provisioner`. Identity:
+`system:serviceaccount:<tenant-namespace>:provisioner`.
 
 A ClusterRole granting `create` and `patch` on all resources (`*`) — the verbs
 required for server-side apply
 ([Kubernetes: Server-Side Apply](https://kubernetes.io/docs/reference/using-api/server-side-apply/)).
 
-The provisioner impersonates this SA via
+The platform provisioner impersonates this SA via
 [impersonation](tenant-isolation.md#impersonation) when provisioning.
 
-### Pruner SA
+### Tenant Pruner SA
+
+Named `pruner`. Identity: `system:serviceaccount:<tenant-namespace>:pruner`.
 
 A ClusterRole granting `delete` on all resources (`*`).
 
-The pruner impersonates this SA via
+The platform pruner impersonates this SA via
 [impersonation](tenant-isolation.md#impersonation) when pruning.
 
 ### Constraints

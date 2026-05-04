@@ -10,6 +10,11 @@ has_children: true
 Tenant isolation is enforced at the infrastructure level. Tenants can provision
 workloads into any namespace name.
 
+Tenants have no direct Kubernetes API access — the cluster is not exposed to
+tenants. All tenant interaction with the platform goes through platform APIs
+(grammateus, source handler APIs). Direct Kubernetes API access by a tenant is
+treated as a security leak.
+
 ## Trust Chain
 
 The isolation model is a dependency chain. Each link depends on the one above
@@ -24,8 +29,8 @@ it. If any link breaks, everything below it is compromised.
         ↓
 4. Identity derivation (Gatekeeper — derives tenant identity from SA's namespace label)
         ↓
-5. Namespace ownership (Gatekeeper — tenant SAs can only operate in namespaces
-   labeled with their tenant identity)
+5. Resource ownership (Gatekeeper — resource label + namespace label must match
+   tenant identity; cluster-scoped resources checked by resource label only)
         ↓
 6. Resource isolation (RBAC + Gatekeeper — no read, no ClusterRoleBindings,
    escalation prevention)
@@ -58,20 +63,20 @@ On CREATE, `oldObject` is null — the initial label is allowed.
 ### Link 3: Tenant Namespace Label
 
 Grammateus creates the tenant namespace and sets the `katastroma.org/tenant`
-label **before** creating the tenant SAs. The label exists before the SAs
-exist. The SAs never had an opportunity to influence their own identity — and
-because the label is immutable (Link 2), they never will.
+label **before** creating the tenant SAs. The label exists before the SAs exist.
+The SAs never had an opportunity to influence their own identity — and because
+the label is immutable (Link 2), they never will.
 
 **Enforced by:** Platform onboarding sequence (grammateus). This is an ordering
 guarantee in the onboarding flow, protected by label immutability.
 
 ### Link 4: Identity Derivation
 
-When a tenant SA makes any request, Gatekeeper extracts the SA's namespace
-from `input.review.userInfo.username`, looks up that namespace in the synced
-resource cache, and reads its `katastroma.org/tenant` label. This is the SA's
-tenant identity. Because the label is immutable (Link 2) and was set before the
-SA existed (Link 3), the tenant SA cannot influence the identity Gatekeeper
+When a tenant SA makes any request, Gatekeeper extracts the SA's namespace from
+`input.review.userInfo.username`, looks up that namespace in the synced resource
+cache, and reads its `katastroma.org/tenant` label. This is the SA's tenant
+identity. Because the label is immutable (Link 2) and was set before the SA
+existed (Link 3), the tenant SA cannot influence the identity Gatekeeper
 derives.
 
 **Enforced by:** Gatekeeper — two capabilities:
@@ -90,28 +95,29 @@ the security boundary. Any resource that exists in the cluster was admitted
 through the constraint at creation time.
 ([Gatekeeper: Admission Review Input](https://open-policy-agent.github.io/gatekeeper/website/docs/input/))
 
-### Link 5: Namespace Ownership
+### Link 5: Resource Ownership
 
-Gatekeeper validates every tenant SA operation against the target namespace's
-tenant label:
+Gatekeeper enforces two checks on every tenant SA operation:
 
-- **Creating a namespace** — the incoming resource must have a
-  `katastroma.org/tenant` label matching the SA's derived identity. No label or
-  wrong label → rejected.
-- **Creating, modifying, or deleting resources in a namespace** — the target
-  namespace's `katastroma.org/tenant` label must match the SA's derived
-  identity. Mismatch → rejected.
+1. **Resource label** — the target resource's own `katastroma.org/tenant` label
+   must match the SA's derived identity. Applies to all resources, namespaced
+   and cluster-scoped.
 
-Namespace names are not checked. A tenant can create a namespace called anything
-— `production`, `my-app`, `foo` — as long as it's labeled with the tenant's
-identity. If the namespace already exists with a different tenant's label,
-Gatekeeper rejects the request — label immutability (Link 2) prevents
-overwriting the existing label.
+2. **Namespace label** — for namespaced resources, the namespace's own
+   `katastroma.org/tenant` label must also match the SA's derived identity. This
+   enforces namespace containment as the Kubernetes-native security boundary.
+
+Gatekeeper determines which checks apply from
+`input.review.object.metadata.namespace`: non-empty means namespaced (both
+checks); empty means cluster-scoped (check 1 only). No resource type is treated
+specially.
+
+Namespace names are not checked — a tenant can name a namespace anything as long
+as it carries their tenant identity label.
 
 **Enforced by:** Gatekeeper custom ConstraintTemplate combining identity
 derivation (Link 4) with incoming resource labels
-(`input.review.object.metadata.labels`) and target namespace lookup
-(`data.inventory`).
+(`input.review.object.metadata.labels`) and namespace lookup (`data.inventory`).
 ([Gatekeeper: Constraint Templates](https://open-policy-agent.github.io/gatekeeper/website/docs/constrainttemplates/),
 [Gatekeeper: Replicating Data](https://open-policy-agent.github.io/gatekeeper/website/docs/sync/))
 
@@ -161,10 +167,9 @@ evaluated, with authorization acting on the impersonated user info.")
 
 ## Resource Ownership
 
-Every provisioned resource is labeled with the tenant identity
-(`katastroma.org/tenant`) and source target identity by the
-[labeler](../event-driven/labeler.md). These labels are the ownership record —
-used for pruning, querying, and the isolation enforcement described above.
+Every provisioned resource is labeled by the
+[labeler](../event-driven/labeler.md). The `katastroma.org/tenant` label is the
+ownership record used for isolation enforcement, pruning, and querying.
 
 ## Cluster-Scoped Resources
 
@@ -190,9 +195,10 @@ Candidate mitigations:
 
 ## What Gatekeeper Prevents
 
-- Any tenant SA creating, modifying, or deleting resources in a namespace
-  labeled with a different tenant identity → rejected
-- Any tenant SA creating a namespace without a matching tenant label → rejected
+- Any tenant SA operating on a resource not labeled with their tenant identity →
+  rejected
+- Any tenant SA operating on a namespaced resource in a namespace not labeled
+  with their tenant identity → rejected
 - Any mutation to the `katastroma.org/tenant` label after resource creation →
   rejected
 - Any tenant SA creating ClusterRoles or ClusterRoleBindings → rejected
